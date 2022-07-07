@@ -1,5 +1,0 @@
-[clickhouse]
-node ansible_host=10.128.0.10 ansible_user=admin zookeeper_id=1
-data ansible_host=10.128.0.10 ansible_user=admin zookeeper_id=2
-datatwo ansible_host=10.128.0.10 ansible_user=admin zookeeper_id=3
-

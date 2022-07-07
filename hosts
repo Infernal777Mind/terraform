@@ -1,0 +1,5 @@
+[clickhouse]
+node ansible_host=62.84.113.203 ansible_user=admin zookeeper_id=1
+data ansible_host=51.250.70.248 ansible_user=admin zookeeper_id=2
+datatwo ansible_host=51.250.67.250 ansible_user=admin zookeeper_id=3
+

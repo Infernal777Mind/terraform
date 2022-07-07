@@ -1,0 +1,32 @@
+output "external_ip_address_vm_1" {
+  value = yandex_compute_instance.vm-1.network_interface.0.nat_ip_address
+}
+output "external_ip_address_vm_2" {
+  value = yandex_compute_instance.vm-2.network_interface.0.nat_ip_address
+}
+output "external_ip_address_vm_3" {
+  value = yandex_compute_instance.vm-3.network_interface.0.nat_ip_address
+}
+inline = ["sudo apt install -y ansible"]
+
+
+  provisioner "remote-exec" {
+    inline = ["sleep 60 | sudo apt install -y ansible"]
+    connection {
+      type = "ssh"
+      user = "admin"
+      port = 22
+      host = yandex_compute_instance.vm-1.network_interface.0.nat_ip_address
+    }
+  }
+
+
+  command = "ansible-playbook -u admin -i '${yandex_compute_instance.vm-1.network_interface.0.nat_ip_address},${yandex_compute_instance.vm-2.network_interface.0.nat_ip_address},${yandex_compute_instance.vm-3.network_interface.0.nat_ip_address}' --private-key=~/.ssh/id_rsa.pub clickhouse.yaml
+
+  resource "local_file" "hosts_cfg" {
+  content = templatefile("./hosts.cfg", {
+    name = yandex_compute_instance.*.public.ip
+    }
+  )
+  filename = "/home/terra/terraform/hosts1.txt"
+}

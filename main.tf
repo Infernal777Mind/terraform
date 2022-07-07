@@ -36,20 +36,36 @@ resource "yandex_compute_instance" "vm-1" {
   metadata = {
     user-data = "${file("/home/terra/terraform/meta.txt")}"
   }
+
+  connection {
+    type = "ssh"
+    user = "admin"
+    port = 22
+    host = yandex_compute_instance.vm-1.network_interface.0.nat_ip_address
+  }
+
   provisioner "remote-exec" {
-    inline = ["sudo apt install -y ansible"]
-    connection {
-      type        = "ssh"
-      user        = "admin"
-      port        = 22
-      host        = self.network_interface[0].nat_ip_address
-      private_key = file("/home/terra/.ssh/id_rsa")
-    }
+    inline = ["sudo apt update -y", "sudo apt upgrade -y"]
   }
+
   provisioner "local-exec" {
-    command = "ansible-playbook -u admin -i clickhouse.yml --list-hosts '${file("/home/terra/terraform/ansible_hosts")}' --private-key '${file("/home/terra/.ssh/id_rsa")}'"
+    command = "sed -i 's/host1/'${yandex_compute_instance.vm-1.network_interface.0.nat_ip_address}'/' ./hosts"
   }
+
+  provisioner "local-exec" {
+    command = "sed -i 's/host2/'${yandex_compute_instance.vm-2.network_interface.0.nat_ip_address}'/' ./hosts"
+  }
+
+  provisioner "local-exec" {
+    command = "sed -i 's/host3/'${yandex_compute_instance.vm-3.network_interface.0.nat_ip_address}'/' ./hosts"
+  }
+
+  provisioner "local-exec" {
+    command = "ansible-playbook -u admin -i ./hosts --private-key=~/.ssh/id_rsa clickhouse.yaml"
+  }
+
 }
+
 resource "yandex_compute_instance" "vm-2" {
   name = "data"
 
@@ -74,16 +90,7 @@ resource "yandex_compute_instance" "vm-2" {
   metadata = {
     user-data = "${file("/home/terra/terraform/meta.txt")}"
   }
-  provisioner "remote-exec" {
-    inline = ["echo $PATH"]
-    connection {
-      type        = "ssh"
-      user        = "admin"
-      port        = 22
-      host        = self.network_interface[0].nat_ip_address
-      private_key = file("/home/terra/.ssh/id_rsa")
-    }
-  }
+
 }
 resource "yandex_compute_instance" "vm-3" {
   name = "datatwo"
@@ -109,14 +116,5 @@ resource "yandex_compute_instance" "vm-3" {
   metadata = {
     user-data = "${file("/home/terra/terraform/meta.txt")}"
   }
-  provisioner "remote-exec" {
-    inline = ["echo $PATH"]
-    connection {
-      type        = "ssh"
-      user        = "admin"
-      port        = 22
-      host        = self.network_interface[0].nat_ip_address
-      private_key = file("/home/terra/.ssh/id_rsa")
-    }
-  }
+
 }
